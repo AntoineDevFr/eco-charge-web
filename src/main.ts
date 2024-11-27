@@ -4,8 +4,8 @@ import { StationModule } from './station.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(StationModule);
-  //const port = process.env.PORT;
+  const port = process.env.PORT;
   app.useGlobalPipes(new ValidationPipe());
-  await app.listen(8080);
+  await app.listen(port);
 }
 bootstrap();
