@@ -9,6 +9,7 @@ import { Station } from './Station';
 export class StationService implements OnModuleInit {
   private readonly logger = new Logger(StationService.name);
   private readonly storage: Map<string, Station> = new Map();
+  private readonly favoriteStations: Map<string, Station> = new Map();
 
   constructor(private readonly httpService: HttpService) {}
   async onModuleInit() {
@@ -90,14 +91,6 @@ export class StationService implements OnModuleInit {
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
   }
 
-  getTotalNumberOfStations(): number {
-    return this.storage.size;
-  }
-
-  remove(id_station: string): void {
-    this.storage.delete(id_station);
-  }
-
   search(term: string): Station[] {
     return Array.from(this.storage.values())
       .filter(
@@ -107,5 +100,24 @@ export class StationService implements OnModuleInit {
           station.n_enseigne.includes(term),
       )
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
+  }
+
+  getAllFavoriteStations(): Station[] {
+    return Array.from(this.favoriteStations.values());
+  }
+
+  toggleFavorite(id_station: string, isFavorite: boolean): string {
+    const station = this.storage.get(id_station);
+    if (!station) {
+      return `Station ${id_station} introuvable.`;
+    }
+
+    if (isFavorite) {
+      this.favoriteStations.set(id_station, station);
+      return `Station ${id_station} ajoutée aux favoris.`;
+    } else {
+      this.favoriteStations.delete(id_station);
+      return `Station ${id_station} retirée des favoris.`;
+    }
   }
 }

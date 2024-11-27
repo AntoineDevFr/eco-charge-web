@@ -1,11 +1,11 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   Param,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import type { Station } from './Station';
@@ -37,14 +37,22 @@ export class StationController {
     return this.stationService.getStation(id_station);
   }
 
-  @Delete(':id_station')
-  deleteStation(@Param('id_station') id_station: string): void {
-    this.stationService.remove(id_station);
-  }
-
   @Post('search')
   @HttpCode(200)
   searchStations(@Body() { term }: { term: string }): Station[] {
     return this.stationService.search(term);
+  }
+
+  @Get('favorites')
+  getFavorites(): Station[] {
+    return this.stationService.getAllFavoriteStations();
+  }
+
+  @Put('favorites/:id')
+  toggleFavorite(
+    @Param('id') id: string,
+    @Body('isFavorite') isFavorite: boolean,
+  ) {
+    return this.stationService.toggleFavorite(id, isFavorite);
   }
 }
