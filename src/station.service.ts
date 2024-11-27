@@ -2,12 +2,13 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import type { StationAPI } from './StationAPI';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom, map } from 'rxjs';
+import { firstValueFrom, map, tap } from 'rxjs';
+import { Station } from './Station';
 
 @Injectable()
 export class StationService implements OnModuleInit {
   private readonly logger = new Logger(StationService.name);
-  private readonly storage: Map<string, StationAPI> = new Map();
+  private readonly storage: Map<string, Station> = new Map();
 
   constructor(private readonly httpService: HttpService) {}
   async onModuleInit() {
@@ -25,57 +26,51 @@ export class StationService implements OnModuleInit {
   }
 
   private async loadStationsFromApi() {
-    const apiUrl =
-      'https://data.opendatasoft.com/api/explore/v2.1/catalog/datasets/bornes-irve@reseaux-energies-rte/records?limit=100';
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(apiUrl).pipe(map((res) => res.data)),
-      );
-      if (response.results && Array.isArray(response.results)) {
-        const stations: StationAPI[] = response.results.map((rawStation) => ({
-          n_amenageur: rawStation.n_amenageur,
-          n_operateur: rawStation.n_operateur,
-          n_enseigne: rawStation.n_enseigne,
-          id_station: rawStation.id_station,
-          n_station: rawStation.n_station,
-          ad_station: rawStation.ad_station,
-          code_insee: rawStation.code_insee,
-          xlongitude: rawStation.xlongitude,
-          ylatitude: rawStation.ylatitude,
-          nbre_pdc: rawStation.nbre_pdc,
-          id_pdc: rawStation.id_pdc,
-          puiss_max: rawStation.puiss_max,
-          type_prise: rawStation.type_prise,
-          acces_recharge: rawStation.acces_recharge,
-          accessibilite: rawStation.accessibilite,
-          observations: rawStation.observations ?? null,
-          date_maj: rawStation.date_maj,
-          source: rawStation.source,
-          geo_point_borne: {
-            lon: rawStation.geo_point_borne?.lon ?? 0,
-            lat: rawStation.geo_point_borne?.lat ?? 0,
-          },
-          code_insee_commune: rawStation.code_insee_commune,
-          region: rawStation.region,
-          departement: rawStation.departement,
-        }));
-        stations.forEach((station) => this.addStation(station));
-        this.logger.log(`Loaded ${stations.length} stations from API`);
-      } else {
-        this.logger.warn('No stations found in API response');
-      }
-    } catch (error) {
-      this.logger.error('Failed to load stations from API', error);
-    }
+    await firstValueFrom(
+      this.httpService
+        .get<{
+          total_count: number;
+          results: StationAPI[];
+        }>(
+          'https://data.opendatasoft.com/api/explore/v2.1/catalog/datasets/bornes-irve@reseaux-energies-rte/records?limit=100',
+        )
+        .pipe(
+          map((response) => response.data.results),
+          map((apiStations) =>
+            apiStations.map((apiStation) => ({
+              n_operateur: apiStation.n_operateur,
+              n_enseigne: apiStation.n_enseigne,
+              id_station: apiStation.id_station,
+              n_station: apiStation.n_station,
+              ad_station: apiStation.ad_station,
+              code_insee: apiStation.code_insee,
+              nbre_pdc: apiStation.nbre_pdc,
+              puiss_max: apiStation.puiss_max,
+              type_prise: apiStation.type_prise,
+              acces_recharge: apiStation.acces_recharge,
+              accessibilite: apiStation.accessibilite,
+              geo_point_borne: {
+                lon: apiStation.geo_point_borne.lon,
+                lat: apiStation.geo_point_borne.lat,
+              },
+              code_insee_commune: apiStation.code_insee_commune,
+              region: apiStation.code_insee_commune,
+              departement: apiStation.departement,
+            })),
+          ),
+          tap((stations) =>
+            stations.forEach((station) => this.addStation(station)),
+          ),
+        ),
+    );
   }
 
-  addStation(station: StationAPI): StationAPI {
+  addStation(station: Station): Station {
     this.storage.set(station.id_station, station);
     return station;
   }
 
-  getStation(id_station: string): StationAPI {
+  getStation(id_station: string): Station {
     const station = this.storage.get(id_station);
     if (!station) {
       throw new Error(`Station with ID ${id_station} not found`);
@@ -83,13 +78,13 @@ export class StationService implements OnModuleInit {
     return station;
   }
 
-  getAllStations(): StationAPI[] {
+  getAllStations(): Station[] {
     return Array.from(this.storage.values()).sort((a, b) =>
       a.n_station.localeCompare(b.n_station),
     );
   }
 
-  getStationsInRegion(region: string): StationAPI[] {
+  getStationsInRegion(region: string): Station[] {
     return this.getAllStations()
       .filter((station) => station.region === region)
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
@@ -103,12 +98,11 @@ export class StationService implements OnModuleInit {
     this.storage.delete(id_station);
   }
 
-  search(term: string): StationAPI[] {
+  search(term: string): Station[] {
     return Array.from(this.storage.values())
       .filter(
         (station) =>
           station.n_station.includes(term) ||
-          station.n_amenageur.includes(term) ||
           station.n_operateur.includes(term) ||
           station.n_enseigne.includes(term),
       )

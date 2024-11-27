@@ -20,7 +20,6 @@ export class StationController {
   createStation(@Body() stationDto: StationDto): StationAPI {
     this.stationService.addStation({
       ...stationDto,
-      observations: stationDto.observations || null,
     });
     return this.stationService.getStation(stationDto.id_station);
   }
