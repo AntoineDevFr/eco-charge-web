@@ -4,14 +4,16 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-Ce projet est un server WEB (API REST) développée avec [NestJS](https://nestjs.com/), permettant de récupérer et d'exposer les données des bornes de recharge pour véhicules électriques issues de l'[API OpenDataSoft](https://data.opendatasoft.com/explore/dataset/bornes-irve%40reseaux-energies-rte/information).
+Ce projet est un serveur web (API REST) développé avec [NestJS](https://nestjs.com/), permettant de récupérer et d'exposer les données des bornes de recharge pour véhicules électriques issues de l'[API OpenDataSoft](https://data.opendatasoft.com/explore/dataset/bornes-irve%40reseaux-energies-rte/information).
 
 ---
 
 ## Fonctionnalités
 
 - Récupération des données des bornes à partir de l'API OpenDataSoft.
-- Filtrage par région, département, ou autre paramètre pertinent.
+- Filtrage des bornes par région, département, ou autre paramètre pertinent.
+- Recherche des bornes en fonction d'un terme de recherche.
+- Gestion des stations favorites.
 - Exposition des données via une API REST simple et performante.
 
 ---
@@ -61,14 +63,41 @@ Le serveur sera accessible sur `http://localhost:3000` (par défaut).
 ## Points d'entrée de l'API
 
 ### GET `/stations`
-Récupère la liste des bornes.  
+Récupère la liste des bornes de recharge.  
 **Exemple de requête :**  
 `GET http://localhost:3000/stations?region=Île-de-France`
 
-### GET `/stations/:id`
+### GET `/stations/:id_station`
 Récupère les informations détaillées d'une borne spécifique.  
 **Exemple de requête :**  
 `GET http://localhost:3000/stations/123456`
+
+### POST `/stations/search`
+Effectue une recherche sur les bornes en fonction d'un terme.  
+**Exemple de requête :**  
+`POST http://localhost:3000/stations/search`  
+**Body :**
+```json
+{
+  "term": "charge rapide"
+}
+```
+
+### GET `/stations/favorites`
+Récupère toutes les stations favorites.  
+**Exemple de requête :**  
+`GET http://localhost:3000/stations/favorites`
+
+### PUT `/stations/favorites/:id`
+Ajoute ou retire une borne de la liste des favoris.  
+**Exemple de requête :**  
+`PUT http://localhost:3000/stations/favorites/123456`  
+**Body :**
+```json
+{
+  "isFavorite": true
+}
+```
 
 ---
 
@@ -79,7 +108,7 @@ Récupère les informations détaillées d'une borne spécifique.
 
 ## Déploiement
 
-Pour déployer l'API sur un serveur de production, nous utiliserons 
+Pour déployer l'API sur un serveur de production, nous utiliserons
 [Clever Cloud](https://www.clever-cloud.com).
 
 ---
@@ -94,5 +123,5 @@ Pour déployer l'API sur un serveur de production, nous utiliserons
 
 ## Auteur
 
-Antoine Banchet
+Antoine Banchet  
 Elliot Galaor
