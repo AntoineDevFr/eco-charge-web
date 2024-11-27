@@ -8,7 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import type { Station } from './Station';
+import type { StationAPI } from './StationAPI';
 import { StationDto } from './Station.dto';
 import { StationService } from './station.service';
 
@@ -17,7 +17,7 @@ export class StationController {
   constructor(private readonly stationService: StationService) {}
 
   @Post()
-  createStation(@Body() stationDto: StationDto): Station {
+  createStation(@Body() stationDto: StationDto): StationAPI {
     this.stationService.addStation({
       ...stationDto,
       observations: stationDto.observations || null,
@@ -26,7 +26,7 @@ export class StationController {
   }
 
   @Get()
-  getStations(@Query('region') region: string): Station[] {
+  getStations(@Query('region') region: string): StationAPI[] {
     if (region) {
       return this.stationService.getStationsInRegion(region);
     }
@@ -34,7 +34,7 @@ export class StationController {
   }
 
   @Get(':id_station')
-  getStation(@Param('id_station') id_station: string): Station {
+  getStation(@Param('id_station') id_station: string): StationAPI {
     return this.stationService.getStation(id_station);
   }
 
@@ -45,7 +45,7 @@ export class StationController {
 
   @Post('search')
   @HttpCode(200)
-  searchStations(@Body() { term }: { term: string }): Station[] {
+  searchStations(@Body() { term }: { term: string }): StationAPI[] {
     return this.stationService.search(term);
   }
 }

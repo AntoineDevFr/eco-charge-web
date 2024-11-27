@@ -1,13 +1,13 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
-import type { Station } from './station';
+import type { StationAPI } from './StationAPI';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map } from 'rxjs';
 
 @Injectable()
 export class StationService implements OnModuleInit {
   private readonly logger = new Logger(StationService.name);
-  private readonly storage: Map<string, Station> = new Map();
+  private readonly storage: Map<string, StationAPI> = new Map();
 
   constructor(private readonly httpService: HttpService) {}
   async onModuleInit() {
@@ -20,7 +20,7 @@ export class StationService implements OnModuleInit {
   }
   private async loadStationsFromFile() {
     const data = await readFile('src/dataset.json', 'utf8');
-    const stations = JSON.parse(data.toString()) as Station[];
+    const stations = JSON.parse(data.toString()) as StationAPI[];
     stations.forEach((station) => this.addStation(station));
   }
 
@@ -33,7 +33,7 @@ export class StationService implements OnModuleInit {
         this.httpService.get(apiUrl).pipe(map((res) => res.data)),
       );
       if (response.results && Array.isArray(response.results)) {
-        const stations: Station[] = response.results.map((rawStation) => ({
+        const stations: StationAPI[] = response.results.map((rawStation) => ({
           n_amenageur: rawStation.n_amenageur,
           n_operateur: rawStation.n_operateur,
           n_enseigne: rawStation.n_enseigne,
@@ -70,12 +70,12 @@ export class StationService implements OnModuleInit {
     }
   }
 
-  addStation(station: Station): Station {
+  addStation(station: StationAPI): StationAPI {
     this.storage.set(station.id_station, station);
     return station;
   }
 
-  getStation(id_station: string): Station {
+  getStation(id_station: string): StationAPI {
     const station = this.storage.get(id_station);
     if (!station) {
       throw new Error(`Station with ID ${id_station} not found`);
@@ -83,13 +83,13 @@ export class StationService implements OnModuleInit {
     return station;
   }
 
-  getAllStations(): Station[] {
+  getAllStations(): StationAPI[] {
     return Array.from(this.storage.values()).sort((a, b) =>
       a.n_station.localeCompare(b.n_station),
     );
   }
 
-  getStationsInRegion(region: string): Station[] {
+  getStationsInRegion(region: string): StationAPI[] {
     return this.getAllStations()
       .filter((station) => station.region === region)
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
@@ -103,7 +103,7 @@ export class StationService implements OnModuleInit {
     this.storage.delete(id_station);
   }
 
-  search(term: string): Station[] {
+  search(term: string): StationAPI[] {
     return Array.from(this.storage.values())
       .filter(
         (station) =>
