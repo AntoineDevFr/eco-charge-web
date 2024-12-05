@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class StationDto {
   @IsString()
@@ -73,4 +79,7 @@ export class StationDto {
 
   @IsString()
   departement: string;
+
+  @IsBoolean()
+  favorite: boolean;
 }

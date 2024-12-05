@@ -17,4 +17,5 @@ export interface Station {
   code_insee_commune: string;
   region: string;
   departement: string;
+  favorite: boolean;
 }

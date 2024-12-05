@@ -1,5 +1,4 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { readFile } from 'node:fs/promises';
 import type { StationAPI } from './StationAPI';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map, tap } from 'rxjs';
@@ -9,7 +8,6 @@ import { Station } from './Station';
 export class StationService implements OnModuleInit {
   private readonly logger = new Logger(StationService.name);
   private readonly storage: Map<string, Station> = new Map();
-  private readonly favoriteStations: Map<string, Station> = new Map();
 
   constructor(private readonly httpService: HttpService) {}
   async onModuleInit() {
@@ -19,11 +17,6 @@ export class StationService implements OnModuleInit {
       this.loadStationsFromApi(),
     ]);
     this.logger.log(`${this.storage.size} stations loaded`);
-  }
-  private async loadStationsFromFile() {
-    const data = await readFile('src/dataset.json', 'utf8');
-    const stations = JSON.parse(data.toString()) as StationAPI[];
-    stations.forEach((station) => this.addStation(station));
   }
 
   private async loadStationsFromApi() {
@@ -57,6 +50,7 @@ export class StationService implements OnModuleInit {
               code_insee_commune: apiStation.code_insee_commune,
               region: apiStation.code_insee_commune,
               departement: apiStation.departement,
+              favorite: false,
             })),
           ),
           tap((stations) =>
@@ -85,6 +79,12 @@ export class StationService implements OnModuleInit {
     );
   }
 
+  getAllFavoriteStations(): Station[] {
+    return this.getAllStations()
+      .filter((station) => station.favorite === true)
+      .sort((a, b) => a.n_station.localeCompare(b.n_station));
+  }
+
   getStationsInRegion(region: string): Station[] {
     return this.getAllStations()
       .filter((station) => station.region === region)
@@ -102,10 +102,6 @@ export class StationService implements OnModuleInit {
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
   }
 
-  getAllFavoriteStations(): Station[] {
-    return Array.from(this.favoriteStations.values());
-  }
-
   toggleFavorite(id_station: string, isFavorite: boolean): string {
     const station = this.storage.get(id_station);
     if (!station) {
@@ -113,10 +109,10 @@ export class StationService implements OnModuleInit {
     }
 
     if (isFavorite) {
-      this.favoriteStations.set(id_station, station);
+      station.favorite = true;
       return `Station ${id_station} ajoutée aux favoris.`;
     } else {
-      this.favoriteStations.delete(id_station);
+      station.favorite = false;
       return `Station ${id_station} retirée des favoris.`;
     }
   }
