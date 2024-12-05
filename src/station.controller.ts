@@ -32,6 +32,11 @@ export class StationController {
     return this.stationService.getAllStations();
   }
 
+  @Get('favorites')
+  getFavorites(): Station[] {
+    return this.stationService.getAllFavoriteStations();
+  }
+
   @Get(':id_station')
   getStation(@Param('id_station') id_station: string): Station {
     return this.stationService.getStation(id_station);
@@ -41,11 +46,6 @@ export class StationController {
   @HttpCode(200)
   searchStations(@Body() { term }: { term: string }): Station[] {
     return this.stationService.search(term);
-  }
-
-  @Get('favorites')
-  getFavorites(): Station[] {
-    return this.stationService.getAllFavoriteStations();
   }
 
   @Put('favorites/:id')
