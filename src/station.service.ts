@@ -10,6 +10,8 @@ export class StationService implements OnModuleInit {
   private readonly storage: Map<string, Station> = new Map();
 
   constructor(private readonly httpService: HttpService) {}
+  // Méthode appelée automatiquement lors de l'initialisation du module.
+  // Ici, elle charge les données des stations depuis une API externe.
   async onModuleInit() {
     this.logger.log('Loading stations from file and API');
     await Promise.all([
@@ -19,6 +21,8 @@ export class StationService implements OnModuleInit {
     this.logger.log(`${this.storage.size} stations loaded`);
   }
 
+  // Charge les données des stations depuis une API.
+  // Les données sont transformées pour correspondre au format interne et ajoutées au stockage.
   private async loadStationsFromApi() {
     await firstValueFrom(
       this.httpService
@@ -60,11 +64,15 @@ export class StationService implements OnModuleInit {
     );
   }
 
+  // Ajoute une station au stockage interne en utilisant son identifiant comme clé.
+  // Retourne la station ajoutée.
   addStation(station: Station): Station {
     this.storage.set(station.id_station, station);
     return station;
   }
 
+  // Récupère une station spécifique par son identifiant.
+  // Lance une erreur si la station n'existe pas.
   getStation(id_station: string): Station {
     const station = this.storage.get(id_station);
     if (!station) {
@@ -73,24 +81,29 @@ export class StationService implements OnModuleInit {
     return station;
   }
 
+  // Retourne la liste de toutes les stations triées par leur nom.
   getAllStations(): Station[] {
     return Array.from(this.storage.values()).sort((a, b) =>
       a.n_station.localeCompare(b.n_station),
     );
   }
 
+  // Retourne la liste de toutes les stations marquées comme favorites, triées par leur nom.
   getAllFavoriteStations(): Station[] {
     return this.getAllStations()
       .filter((station) => station.favorite === true)
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
   }
 
+  // Retourne toutes les stations situées dans une région donnée, triées par leur nom.
   getStationsInRegion(region: string): Station[] {
     return this.getAllStations()
       .filter((station) => station.region === region)
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
   }
 
+  // Effectue une recherche parmi les stations en fonction d'un terme donné.
+  // Le terme peut correspondre au nom, à l'opérateur ou à l'enseigne de la station.
   search(term: string): Station[] {
     return Array.from(this.storage.values())
       .filter(
@@ -102,6 +115,8 @@ export class StationService implements OnModuleInit {
       .sort((a, b) => a.n_station.localeCompare(b.n_station));
   }
 
+  // Change le statut favori d'une station en fonction de l'identifiant et du statut donné.
+  // Retourne un message confirmant le changement ou signalant que la station est introuvable.
   toggleFavorite(id_station: string, isFavorite: boolean): string {
     const station = this.storage.get(id_station);
     if (!station) {

@@ -1,3 +1,5 @@
+// Cette interface représente le format des données renvoyées par l'API des stations.
+// Elle définit la structure des objets de type `StationAPI`, avec leurs propriétés et types associés.
 export interface StationAPI {
   n_amenageur: string;
   n_operateur: string;

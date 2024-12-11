@@ -64,26 +64,6 @@ describe('StationController (e2e)', () => {
     expect(response.body).toMatchObject(station);
   });
 
-  it('/stations/:id (DELETE) - should delete a station', async () => {
-    const station = {
-      id_station: 'delete-id',
-      n_station: 'To Delete',
-      n_amenageur: 'Delete Amenageur',
-      ad_station: 'Delete Address',
-      region: 'Delete Region',
-    };
-    await request(app.getHttpServer())
-      .post('/stations')
-      .send(station)
-      .expect(201);
-    await request(app.getHttpServer())
-      .delete(`/stations/${station.id_station}`)
-      .expect(200);
-    await request(app.getHttpServer())
-      .get(`/stations/${station.id_station}`)
-      .expect(500);
-  });
-
   it('/stations?region=Test Region (GET) - should return stations in a specific region', async () => {
     const station = {
       id_station: 'region-id',

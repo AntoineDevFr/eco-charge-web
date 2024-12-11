@@ -1,3 +1,4 @@
+// Cette classe représente le Data Transfer Object (DTO) pour une station.
 import {
   IsBoolean,
   IsNotEmpty,
@@ -66,6 +67,7 @@ export class StationDto {
   @IsString()
   source: string;
 
+  @IsNotEmpty()
   geo_point_borne: {
     lon: number;
     lat: number;
